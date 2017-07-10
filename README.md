@@ -2,7 +2,7 @@
 nodejs线上部署文档教程
 
 ## 目录
-* [购买域名，服务器](#购买域名，服务器)
+* [购买域名和服务器](#购买域名，服务器)
 * [远程登录服务器](#远程登录服务器)
 * [配置root及应用管理权限](#配置root及应用管理权限)
 * [配置通过ssh实现无密码登录](#配置通过ssh实现无密码登录)
@@ -25,7 +25,12 @@ nodejs线上部署文档教程
 
 
 ### 购买域名，服务器
+推荐购买阿里云的服务器，新手有六个月的免费套餐，再去阿里云的万网购买域名，一定要备案
+
 ### 远程登录服务器
+windows系统下载putty客户端 登陆ssh命令行 
+下载链接 [https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html "悬停显示")
+
 ### 配置root及应用管理权限
 ### 配置通过ssh实现无密码登录
 ### 修改服务器默认登录端口，增强安全性
