@@ -28,7 +28,7 @@ nodejs线上部署文档教程
 推荐购买阿里云的服务器，新手有六个月的免费套餐，再去阿里云的万网购买域名，一定要备案
 
 ### 远程登录服务器
-windows系统下载putty客户端 登陆ssh命令行 
+windows系统下载putty客户端 登陆ssh命令行 <br>
 下载链接 [https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html "悬停显示")<br>
 远程登录服务器     mac/linux 命令  
 ```
@@ -40,6 +40,32 @@ ssh root@公网ip
 退出服务器 `control + d` <br>
 
 ### 配置root及应用管理权限
+添加管理员
+```
+adduser  yu_manager
+```
+输入密码，full name以及room <br>
+设置管理员权限,让他代理root的权限
+```
+gpasswd -a 管理员名称 sudo
+```
+进入编辑界面
+```
+sudu visudo
+```
+`root ALL=(ALL:ALL) ALL` 在这行下面添加一行 `yu_manager ALL=(ALL:ALL) ALL`
+第一个ALL对所有sudo生效，第二个yu_manager可以以任何用户执行命令，第三个yu_manager可以以任何的组执行命令，第四个这个规则适用于所有命令<br>
+一句话 yu_manager可以向root一样，只要提供密码可以运行任何root可以运行的命令<br>
+加#的行是注释<br>
+保存`control + x`，再按下`shift + y`，再点回车<br>
+新开命令行  
+```
+ssh yu_manager@公网ip
+```
+输入密码，就可以登录管理员账户<br>
+如果失败  可以在root下执行`service ssh restart` 重启一下，然后再登录管理员账户
+
+
 ### 配置通过ssh实现无密码登录
 ### 修改服务器默认登录端口，增强安全性
 ### 配置 iptables 和 Fail2Ban 增强安全防护
