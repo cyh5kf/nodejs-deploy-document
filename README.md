@@ -34,6 +34,10 @@ windows系统下载putty客户端 登陆ssh命令行
 ```
 ssh root@公网ip
 ```
+然后输入密码<br>
+查看硬盘使用情况 df -h<br>
+查看服务器硬盘列表 fdisk -l<br>
+退出服务器 control + d<br>
 
 ### 配置root及应用管理权限
 ### 配置通过ssh实现无密码登录
