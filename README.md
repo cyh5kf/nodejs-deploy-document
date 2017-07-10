@@ -85,7 +85,7 @@ ssh key加入代理中
 ```
 ssh-add ~/.ssh/id_rsa
 ```
-新开命令行，登录命令行执行相同命令
+新开命令行，登录服务器命令行执行相同命令
 ```
 ssh-keygen -t rsa -b 4096 -C "chenyu@yunserver.com"
 ```
@@ -127,14 +127,29 @@ ssh yu_manager@公网IP
 ```
 就可以直接登录无需输入密码
 
-
-
-
-
-
-
-
 ### 修改服务器默认登录端口，增强安全性
+修改配置文件
+```
+sudo vi /etc/ssh/sshd_config
+```
+输入当前账号密码，进入编辑页面，有必要新开一个窗口登录服务器，防止修改错误，忘记了导致无法登录
+将port改为xxxx(需要在阿里云服务器安全组配置规则里增加相同的端口号)，确保`UserDns`为no，最后一行添加`AllowUser yu_manager`<br>
+按esc，:wq!保存退出<br>
+重启ssh服务  
+```
+sudo service ssh restart 
+```
+
+关闭root密码登录，也是增强安全性
+```
+sudo vi /etc/ssh/sshd_config
+```
+修改`PermitRootLogin` 为 no，`PasswordAuthentication` 为 no，`PermitEmptyPasswords`为 no
+设置以后无论是`ssh root@47.94.211.202`还是`ssh -p 3389 root@47.94.211.202`都登录不进去了
+
+
+
+
 ### 配置 iptables 和 Fail2Ban 增强安全防护
 ### 搭建服务器的nodejs环境
 ### 通过pm2让node服务常驻
