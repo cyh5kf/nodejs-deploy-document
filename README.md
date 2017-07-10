@@ -148,10 +148,67 @@ sudo vi /etc/ssh/sshd_config
 设置以后无论是`ssh root@47.94.211.202`还是`ssh -p 3389 root@47.94.211.202`都登录不进去了
 
 
-
-
 ### 配置 iptables 和 Fail2Ban 增强安全防护
+暂且跳过，不影响项目部署，主要是为了增强安全性
+
 ### 搭建服务器的nodejs环境
+更新一下系统
+```
+sudo apt-get update
+```
+安装包文件   
+```
+sudo apt-get install vim openssl build-essential libssl-dev wget curl git
+```
+打开github 找到`creationix/nvm`<br>
+复制`wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash`<br>
+新打开窗口登录服务器
+```
+nvm install v8.1.3
+```
+```
+nvm use v8.1.3
+```
+指定系统的默认node版本
+```
+nvm alias default v8.1.3  
+```
+`node -v`  查看node版本<br>
+安装cnpm 
+```
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+```
+输入命令  
+```
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+```
+安装模块  
+```
+cnpm i pm2 webpack gulp grunt-cli -g
+```
+
+在服务器更目录下  
+```
+vim app.js
+```
+编辑文件
+```
+const http = require("http");
+
+http.createServer(function(req, res) {
+   res.writeHead(200, {'Content-Type': 'text/plain'})
+   res.end('来自陈宇');
+
+}).listen(8080)
+
+console.log('server running on http://47.94.211.202:8080/');
+```
+启动服务
+```
+node app.js 
+```
+如果端口无法访问，需要到阿里云控制台安全组配置里面配置TCP端口，自定义TCP，端口范围8080/8080，地址段访问，授权对象 0.0.0.0/0
+
 ### 通过pm2让node服务常驻
 ### 配置nginx反向代理 nodejs端口
 ### 更改域名的DNS更服务器
