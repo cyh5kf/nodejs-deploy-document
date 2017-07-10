@@ -29,7 +29,7 @@ nodejs线上部署文档教程
 
 ### 远程登录服务器
 windows系统下载putty客户端 登陆ssh命令行 
-下载链接 [https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html "悬停显示")
+下载链接 [https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html "悬停显示")<br>
 远程登录服务器     mac/linux 命令  
 ```
 ssh root@公网ip
