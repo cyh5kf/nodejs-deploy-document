@@ -577,9 +577,224 @@ crontab -e
 ```
 //分钟 小时 `control + x` `shift + y`  回车
 
-
 ### 上传数据库备份到七牛私有云
+到七牛云官方文档查看nodejs文件上传[https://developer.qiniu.com/kodo/sdk/1289/nodejs#5](https://developer.qiniu.com/kodo/sdk/1289/nodejs#5 "悬停显示")<br>
+在tasks目录下创建    
+```
+vi upload.js
+```
+```
+var qiniu = require('qiniu');
+var config = new qiniu.conf.Config();
+// 空间对应的机房
+config.zone = qiniu.zone.Zone_z0;
+// 是否使用https域名
+//config.useHttpsDomain = true;
+// 上传是否使用cdn加速
+//config.useCdnDomain = true;
+var parts = process.env.NODE_ENV.split('@');
+var file = parts[1] + '.tar.gz';
+var localFile = parts[0] + '/' + file;
+console.log(localFile);
+var formUploader = new qiniu.form_up.FormUploader(config);
+var putExtra = new qiniu.form_up.PutExtra();
+
+var accessKey = '2dAyWqJrZNlHGtWTxdxVsDWlKMvRpDMTh9XqvHod';
+var secretKey = 'hAlZcnd_7zv8q9WTDv7bbylNvMC_DDzCEj4hoxta';
+var mac = new qiniu.auth.digest.Mac(accessKey, secretKey);
+//要上传的空间
+bucket = 'i18ndeploydb';
+var options = {
+  scope: bucket,
+};
+var putPolicy = new qiniu.rs.PutPolicy(options);
+var uploadToken=putPolicy.uploadToken(mac);
+
+//上传到奥七牛要保存的文件名
+key = file;
+
+// 文件上传
+formUploader.putFile(uploadToken, key, localFile, putExtra, function(respErr,
+  respBody, respInfo) {
+  if (respErr) {
+    throw respErr;
+  }
+  if (respInfo.statusCode == 200) {
+    console.log(respBody);
+  } else {
+    console.log(respInfo.statusCode);
+    console.log(respBody);
+  }
+});
+```
+再编辑备份脚本文件`vi i18n.backup.sh`，在最后一行添加：
+```
+NODE_ENV=$backUpFolder@$backFileName node /home/yu_manager/tasks/upload.js
+```
+在tasks目录下，安装七牛模块`cnpm i qiniu`<br>
+执行脚本文件`sh ./i18n.backup.sh`<br>
+修改完善定时任务`crontab -e` 每一行命令对应一个任务，可以设置每一天备份一次<br>
+
+安装mysql
+```
+sudo apt-get install mysql-server mysql-client
+```
+设置root密码  test123
+
 ### 上传项目代码到线上私有git仓库
+可选免费的私有git仓库`git.oschina.net`
+本地上传私钥到线上仓库，`cd .ssh`，把id_ras.pub内容拷贝到线上git仓库SSH公钥，添加公钥<br>
+在本地配置全局的git email和密码<br>
+
+服务器安装git
+```
+sudo apt-get install git
+```
+mongoose连接线上数据库方式
+```
+mongoose.connect('mongodb://username:password@host:port/database?options...');
+```
+在服务器上创建项目文件夹
+```
+sudo mkdir /www
+cd /www
+sudo mkdir 项目名
+pwd 项目路径就是/www/项目名
+```
+赋予管理员修改项目文件夹和production文件夹的读写修改的权限
+在www目录下 
+```
+sudo chmod 777 项目名
+```
+进去项目文件夹内 
+```
+sudo chmod 777 production
+```
+
+在本地项目根目录新建文件`ecosystem.json`
+```
+{
+    "apps": [
+        {
+            "name": "", //名称
+            "script": "server/app.js", //程序入库
+            "cwd": "./", //根目录
+            "env": {
+                "COMMON_VARIABLE": "true"
+            },
+            "env_production": {
+                "NODE_ENV": "production"
+            },
+            "exec_interpreter": "babel-node",
+            "error_file":"./server/logs/app-err.log",//错误输出日志
+            "out_file":"./server/logs/app-out.log",  //日志
+            "log_date_format":"YYYY-MM-DD HH:mm Z" //日期格式
+        }
+    ],
+    "deploy": {
+        "production": {
+            "user": "yu_manager",
+            "host": [
+                "服务器公网IP"
+            ],
+            "port": "服务器登录端口",
+            "ref": "origin/master",
+            "repo": "git仓库地址",
+            "path": "/www/项目名/production",
+            "ssh_options": "StrictHostKeyChecking=no",
+            "post-deploy": "cnpm install && npm run build && pm2 startOrRestart ecosystem.json --env production",
+            "env"  : {
+                "NODE_ENV": "production"
+            }
+        }
+    }
+}
+```
+然后通过git提交代码<br>
+在本地项目根目录下，第一次执行拷贝项目代码到服务器上  
+```
+pm2 deploy ecosystem.json production setup
+```
+
 ### 从本地发布上线和更新服务器的nodejs项目
+因为pm2在服务器上用的是非交互的ssh连接方式，在服务器更目录下`vi .bashrc`，将这几行注释
+```
+#case $- in
+#    *i*) ;;
+#     *) return;;
+#esac
+```
+保存`:wq!` 加载 `.bashrc`      
+```
+source .bashrc
+```
+
+配置nginx反向代理<br>
+在服务器根目录下`cd /etc/nginx/config.d`
+编辑配置文件`sudo vi  xxxx-3000.conf`
+```
+upstream i18n {
+  server 127.0.0.1:3000;
+}
+
+server {
+  listen 80;
+  server_name 域名地址;
+
+  location / {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forward-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Nginx-Proxy true;
+    proxy_pass http://项目名;
+    proxy_redirect off;
+
+  }
+  
+  location ~* ^.+\.(jpg|jpeg|gif|png|ico|css|js|pdf|txt) {
+    root /www/i18n/production/current/client/dist;
+  }
+}
+```
+保存，重启服务器 
+```
+sudo nginx -s reload
+```
+如果有防火墙需打开防火墙相应端口
+```
+sudo /etc/iptables.rules
+```
+增加两行 
+```
+-A INPUT -s 127.0.0.1 -p tcp --destination-port 3000 -m state --state NEW,ESTABLISHED -j ACCEPT
+-A OUTPUT -d 127.0.0.1 -p tcp --source-port 3000 -m state --state ESTABLISHED -j ACCEPT
+```
+保存，重启防火墙  
+```
+sudo iptables-restore < /etc/iptables.rules
+```
+
+本地修改同步到线上服务器<br>
+首先保证本地代码修改后提交gitj<br>
+将代码同步到线上，并启动服务
+```
+pm2 deploy ecosystem.json production
+```
+线上服务器需要全局安装`babel-cli`
+
+
 ### 项目部署的一般流程总结
+1.在dnspod域名管理网站添加二级子域名<br>
+2.在本地项目后端服务入口文件写好没有用过的端口号<br>
+3.本地项目，修改mongodb本地和线上的连接方式，线上写好用户名和密码<br>
+4.本地，写好发布脚本ecosystem.json，修改名字，仓库地址，服务器ip，端口号<br>
+5.服务器上，在/www下新建项目文件夹，授权文件夹`sudo chomd 777 文件夹名`<br>
+6.服务器下，新增nginx配置文件，在`/etc/nginx/conf.d`, 可直接复制其他配置文件`sudo cp 文件夹名 文件夹名` ，编辑nginx 配置文件，`sudo vi ...` 修改域名，端口号，名称<br>
+7.在本地，先提交代码到仓库<br>
+8.部署代码，第一次，初始化服务器项目目录结构，`pm2 deploy ecosystem.json production setup`，第二次部署发布`pm2 deploy ecosystem.json productio`<br>
+9.在服务器上，检查`pm2 list` ,如有问题，不断重启，先停pm2服务，检查日志，`pm2 logs`<br>
+10.修改防火墙，`sudo vi /etc/iptables.rules`，增加新的端口，<br>
+   重启防火墙，`iptables-restore < /etc/iptables.rules`<br>
+   重启`nginx  sudo nginx -s reload`
+
 ### 申请选购SSL证书
