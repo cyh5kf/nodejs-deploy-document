@@ -26,7 +26,7 @@ nodejs线上部署文档教程
 
 ### 购买域名服务器
 推荐购买阿里云的服务器，新手有六个月的免费套餐，再去阿里云的万网购买域名，一定要备案<br>
-建议选择ubuntu 14.04操作系统，本教程是在该系统下操作的
+建议选择ubuntu 14.04操作系统，本教程是在该系统下操作的，区域选择离自己最近的区域
 
 ### 远程登录服务器
 windows系统下载putty客户端 登陆ssh命令行 <br>
@@ -533,6 +533,51 @@ mongo 127.0.0.1:29999/新数据库名  -u 数据库用户名 -p 密码
 `show tables``db.users.find({})`
 
 ### 数据库备份
+在服务器更目录，创建数据库备份执行脚本
+```
+mkdir tasks
+cd tasks
+vi 数据库名.backup.sh
+```
+编辑脚本文件
+```
+#!/bin/sh
+
+backUpFolder=/home/管理员名/backup/数据库名
+date_now=`date +%Y_%m_%d_%H%M`
+backFileName=数据库名_$date_now
+
+cd  $backUpFolder
+mkdir -p $backFileName
+
+mongodump -h 127.0.0.1:29999 -d 数据库名 -u 数据库名_wheel -p 密码 -o $backFileName
+
+tar zcvf $backFileName.tar.gz $backFileName
+
+rm -rf $backFileName
+```
+在更目录下，创建文件夹
+```
+mkdir backup
+cd backup
+mkdir 数据库名
+```
+在服务器根目录下执行脚本文件  
+```
+sudo sh ./tasks/数据库名.backup.sh
+```
+启动系统的定时任务  
+```
+crontab -e
+```
+选择第`2. /bin/nano`
+编辑
+```
+19 00 * * * sh /home/yu_manager/tasks/i18n.backup.sh
+```
+//分钟 小时 `control + x` `shift + y`  回车
+
+
 ### 上传数据库备份到七牛私有云
 ### 上传项目代码到线上私有git仓库
 ### 从本地发布上线和更新服务器的nodejs项目
