@@ -25,7 +25,8 @@ nodejs线上部署文档教程
 
 
 ### 购买域名服务器
-推荐购买阿里云的服务器，新手有六个月的免费套餐，再去阿里云的万网购买域名，一定要备案
+推荐购买阿里云的服务器，新手有六个月的免费套餐，再去阿里云的万网购买域名，一定要备案<br>
+建议选择ubuntu 14.04操作系统，本教程是在该系统下操作的
 
 ### 远程登录服务器
 windows系统下载putty客户端 登陆ssh命令行 <br>
@@ -306,7 +307,16 @@ sudo vi nginx.conf
 
 
 ### 更改域名的DNS更服务器
+先注册DNSPOD域名解析商 [https://support.dnspod.cn/Kb/showarticle/tsid/40/](https://support.dnspod.cn/Kb/showarticle/tsid/40/ "悬停显示")<br>
+在DNPOD下，复制2个DNS短地址到阿里云域名控制台，基本管理，DNS修改<br>
+在DNSPOD域名解析里面添加域名，添加记录，A记录
+在服务器下，进入目录`cd /etc/nginx/conf.d`，然后修改`cypws-cn-8080.conf` `server_name`改成自己备案的域名地址就可以了，如www.xxxx.cn<br>
+然后通过域名访问就可以了
+
 ### ubuntu安装mongodb
+
+
+
 ### 往线上mongodb导入数据库
 ### 为线上数据库配置读取权限
 ### 从一台服务器迁移数据到另一个线上mongodb
