@@ -798,3 +798,66 @@ pm2 deploy ecosystem.json production
    重启`nginx  sudo nginx -s reload`
 
 ### 申请选购SSL证书
+国内，又拍云 ，腾讯云，阿里云，七牛云，推荐腾讯云<br>
+管理中心-》云产品-》ssl证书管理-》申请证书->手动DNS验证》查看证书详情<br>
+复制主机记录，记录值-》dnspod-》添加记录，cname方式粘贴主机记录和记录值，再添加对应A记录  域名和服务器ip<br>
+腾讯云查询-》下载证书<br>
+在本地下载的证书nginx目录下上传到服务器更目录   
+```
+scp -P 3389 ./2_mini.iblack7.com.key 管理员名@....:/home/管理员名/
+scp -P 3389 ./1_mini.iblack7.com.bundle.crt 管理员名@....:/home/管理员名/
+```
+再上传free的证书 ，再执行一遍上面的代码
+在服务器根目录
+```
+mkdir ssl
+mv 1_*  ./ssl/
+mv 2_*  ./ssl/
+sudo mv ssl /www/
+```
+
+证书安装可参考 腾讯云 证书管理，详情，执行文档，nginx安装方法，复制server,不要复制location部分<br>
+修改nginx配置文件，在服务器上进入 `cd /etc/nginx/conf.d`
+修改文件夹名，带上free开头， `sudo vi free。。`<br>
+粘贴代码到server部分<br>
+`listen 443`  ssl证书访问的端口号<br>
+`server name` 证书绑定的域名<br>
+`ssl on` 启动ssl认证<br>
+`ssl_certificate /www/ssl/1_free.._bundle.crt`<br>
+`ssl_certificate_key /www/ssl/2_free..key`<br>
+`ssl_protocols`   ssl证书所配置的协议<br>
+`ssl_ciphers`   加密套件<br>
+location部分不用改，具体代码如下：
+```
+upstream free {
+}
+
+再加一个server部分
+server {
+  listen 80 
+  server_name app....com
+  #rewrite ^(.*)  https://$host$1 permanent;
+  return  301 https://app.xxx.com$request_url; 
+}
+
+server {
+  listen 443;
+  server_name free.xxx.com
+  ...
+
+  proxy_pass http://free
+  最底下加一行
+  if($ssl_protocols = "") {
+    rewrite ^(.*)  https://$host$1 permanent;
+  }
+}
+```
+修改另外一个nginx配置文件<br>
+检查配置文件有没有错误`sudo nginx -t` 检查配置文件有没有错误<br>
+重启nginx服务`sudo nginx -s reload`<br>
+
+阿里云ssl证书 控制台-》安全云盾-》证书服务-》购买证书-》免费DV SSL->购买  证书控制台-》补全...
+
+
+
+
