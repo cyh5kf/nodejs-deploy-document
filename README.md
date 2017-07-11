@@ -309,16 +309,124 @@ sudo vi nginx.conf
 ### 更改域名的DNS更服务器
 先注册DNSPOD域名解析商 [https://support.dnspod.cn/Kb/showarticle/tsid/40/](https://support.dnspod.cn/Kb/showarticle/tsid/40/ "悬停显示")<br>
 在DNPOD下，复制2个DNS短地址到阿里云域名控制台，基本管理，DNS修改<br>
-在DNSPOD域名解析里面添加域名，添加记录，A记录
+在DNSPOD域名解析里面添加域名，添加记录，A记录<br>
 在服务器下，进入目录`cd /etc/nginx/conf.d`，然后修改`cypws-cn-8080.conf` `server_name`改成自己备案的域名地址就可以了，如www.xxxx.cn<br>
 然后通过域名访问就可以了
 
 ### ubuntu安装mongodb
-
-
+按照文档的步骤操作[https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/ "悬停显示")<br>
+在服务器更目录下执行命令
+```
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
+```
+```
+选14.04
+```
+echo "deb [ arch=amd64 ] http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.4.list
+```
+```
+sudo apt-get update
+```
+```
+sudo apt-get install -y mongodb-org
+```
+如果下在比较慢，可以进入`/etc/apt/sources.list.d`目录
+```
+sudo vi mongodb-org-3.4.list
+```
+将`http://repo.mongodb.org/apt/ubuntu` 改为`mirrors.aliyun.com/mongodb/apt...`保存退出
+```
+sudo apt-get update
+```
+```
+sudo apt-get install -y mongodb-org
+```
+开启mongodb服务  
+```
+sudo service mongod start
+```
+检查是否开启，查看日志文件   
+```
+cat /var/log/mongodb/mongod.log
+```
+打开mongodb命令行环境
+```
+mongo
+```
+停止服务   
+```
+sudo service mongod stop
+```
+重启  
+```
+sudo service mongod restart
+```
+修改mongodb默认端口号
+```
+sudo vi /etc/mongod.conf
+```
+```
+net:
+  port: 29999
+  bindIp: 127.0.0.1
+ ```
+ 重启 
+ ```
+ sudo service mongod restart
+ ```
+ 有防火墙需要修改防火墙端口，没有防火墙配置直接登录`mongo --port 29999`
 
 ### 往线上mongodb导入数据库
+导出打包本地数据库   
+```
+mongodump -h 127.0.0.1:27017 -d 数据库名 -o 数据库名
+```
+打包压缩  
+```
+tar zcvf 数据库名-backup.tar.gz 数据库名-backup
+```
+在服务器创建文件夹   
+```
+mkdir dbbackup
+```
+将压缩包从本地上传到服务器   
+```
+scp -P 服务器端口号 ./数据库名-backup.tar.gz 管理员名称@服务器公网IP:/home/管理员名称/dbbackup
+```
+在服务器上解压缩  
+```
+tar xvf 数据库名-backup.tar.gz
+```
+进入目录`cd i18n-backup/`<br>
+导入数据库<br>
+在服务器更目录下`mongorestore --host 127.0.0.1:29999 -d 数据库名 ./dbbackup/i18n-backup/数据库名/<br>
+导入成功之后进入数据库`mongo --port 29999`<br>
+`use i18n` `show tables` `db.i18nitems.find().pretty()`查看表数据<br>
+
+本地导出单表
+```
+mongoexport -d 数据库名 -c 单表名 -q '{"name": {$ne: null}}' -o ./数据库名-表名.json
+```
+导入到服务器数据库
+```
+scp -p 服务器端口号 ./数据库名-表名.json 管理员名称@服务器公网IP:/home/管理员名称/dbbackup
+```
+在服务器上，进入dbbackup目录
+```
+mongoimport --host 127.0.0.1:29999 -d 数据库名 -c 表名 ./数据库名-表名.json
+```
+删除数据库
+```
+mongo --host 127.0.0.1:29999 -d 数据库名 --eval "db.dropDatabase()"
+```
+
 ### 为线上数据库配置读取权限
+先导入数据库，再配置数据库权限<br>
+
+
+
+
+
 ### 从一台服务器迁移数据到另一个线上mongodb
 ### 数据库备份
 ### 上传数据库备份到七牛私有云
