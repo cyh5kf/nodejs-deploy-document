@@ -421,9 +421,59 @@ mongo --host 127.0.0.1:29999 -d 数据库名 --eval "db.dropDatabase()"
 
 ### 为线上数据库配置读取权限
 先导入数据库，再配置数据库权限<br>
+添加管理员账号，先进入mongodb命令行环境
+```
+mongo --port 29999
+```
+切换数据库   
+```
+use admin
+```
+添加管理员
+```
+db.createUser({user: '管理员名(_owner)', pwd: 'xxx', roles: [{role: 'userAdminAnyDatabase', db: 'admin'}]})
+```
+对用户登录进行授权，返回1成功  
+```
+db.auth('管理员名','密码')   
+```
+切换到其他数据库   
+```
+use 数据库名
+```
+添加该数据库用户，具备读写操作
+```
+db.createUser({user: '用户名(数据库名_runner)', pwd: 'xxx', roles: [{role: 'readWrite', db: '数据库名'}]})
+```
+创建备份角色，备份操作，只能读不能写
+```
+db.createUser({user: '用户名(数据库名_wheel)', pwd: 'xxx', roles: [{role: 'read', db: '数据库名'}]})
+```
+添加其他数据权限流程，先到admin下授权db.auth，切换到其他数据库，创建用户角色，再创建备份角色
 
+开启验证模式，修改配置文件
+```
+sudo /etc/mongod.conf
+```
+将#security:  修改为 
+```
+security:
+  authorization: 'enabled'
+```
+重启mongodb    
+```
+sudo service mongod restart
+```
+进入数据库`mongo --port 29999`<br>
+直接`show dbs`是没有权限查询<br>
+先进入admin`use admin`，再认证`db.auth('管理员名','密码')`<br>
+再执行`show dbs`就有权限查询了，`exit`退出数据库
 
-
+直接登录某个数据库命令   
+```
+mongo 127.0.0.1:29999/管理员名(_runner) -u 数据库名_runner -p 密码
+```
+`show tables` `db.logins.find({})`就可以查询数据库了
 
 
 ### 从一台服务器迁移数据到另一个线上mongodb
