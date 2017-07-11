@@ -52,7 +52,7 @@ gpasswd -a 管理员名称 sudo
 ```
 进入编辑界面
 ```
-sudu visudo
+sudo visudo
 ```
 `root ALL=(ALL:ALL) ALL` 在这行下面添加一行 `yu_manager ALL=(ALL:ALL) ALL`
 第一个ALL对所有sudo生效，第二个yu_manager可以以任何用户执行命令，第三个yu_manager可以以任何的组执行命令，第四个这个规则适用于所有命令<br>
