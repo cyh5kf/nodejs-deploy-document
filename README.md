@@ -319,7 +319,6 @@ sudo vi nginx.conf
 ```
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
 ```
-```
 选14.04
 ```
 echo "deb [ arch=amd64 ] http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.4.list
@@ -370,11 +369,11 @@ net:
   port: 29999
   bindIp: 127.0.0.1
  ```
- 重启 
- ```
- sudo service mongod restart
- ```
- 有防火墙需要修改防火墙端口，没有防火墙配置直接登录`mongo --port 29999`
+重启 
+```
+sudo service mongod restart
+```
+有防火墙需要修改防火墙端口，没有防火墙配置直接登录`mongo --port 29999`
 
 ### 往线上mongodb导入数据库
 导出打包本地数据库   
