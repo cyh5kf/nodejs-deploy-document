@@ -197,7 +197,7 @@ const http = require("http");
 
 http.createServer(function(req, res) {
    res.writeHead(200, {'Content-Type': 'text/plain'})
-   res.end('来自陈宇');
+   res.end('hello world!');
 
 }).listen(8080)
 
@@ -210,7 +210,101 @@ node app.js
 如果端口无法访问，需要到阿里云控制台安全组配置里面配置TCP端口，自定义TCP，端口范围8080/8080，地址段访问，授权对象 0.0.0.0/0
 
 ### 通过pm2让node服务常驻
+启动node服务
+```
+pm2 start app.js
+```
+查看服务列表
+```
+pm2 list 
+```
+查看应用详细信息
+```
+pm2 show  应用名字
+```
+查看日志， control + c退出
+```
+pm2 logs
+```
+
 ### 配置nginx反向代理 nodejs端口
+原理：nodejs不具备权限通过外网访问80端口，用root权限启动对80端口的监听，把来自80端口的流量分配给node服务的另外一个端口，实现node服务的代理，实际上就是把80端口的请求都转发到nodejs启动的8080端口上<br>
+先关闭apache服务
+```
+sudo service apache  stop
+```
+删除apache服务
+```
+update-rc.d -f apache2 remove
+```
+```
+sudo apt-get remove apache2
+```
+更新包列表
+```
+sudo apt-get update
+```
+安装nginx
+```
+sudo apt-get install nginx
+```
+查看版本
+```
+nginx -v
+```
+进入目录`cd /etc/nginx/conf.d` `pwd`查看路径<br>
+新建配置文件，文件命名以域名加端口的方式归类，多个项目对应多个服务，考虑负载均衡 
+```
+sudo vi cypws-cn-8080.conf
+```
+编辑配置文件
+```
+upstream cypws {
+  server 127.0.0.1:8080;
+}
+
+server {
+  listen 80;
+  server_name 服务器公网ip地址;
+
+  location / {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forward-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Nginx-Proxy true;
+    proxy_pass http://cypws;
+    proxy_redirect off;
+
+  }
+}
+```
+返回上一层目录 `/etc/nginx`<br>
+编辑配置文件
+```
+sudo vi nginx.conf
+```
+确保`include /etc/nginx/conf.d/*.conf;` 注释打开
+检测配置文件有没有错误   
+```
+sudo nginx -t
+```
+重启nginx服务器    
+```
+sudo nginx -s reload
+```
+重启pm2   
+```
+pm2 restart all
+```
+在浏览器上直接访问服务器ip地址就可以了<br>
+去掉浏览器网络的nginx版本信息，进入/etc/nginx目录
+```
+sudo vi nginx.conf
+```
+把`server_tokens off;`注释拿掉<br>
+重启服务器`sudo service nginx reload`这样再访问浏览器是，network里的nginx版本信息就不会显示了
+
+
 ### 更改域名的DNS更服务器
 ### ubuntu安装mongodb
 ### 往线上mongodb导入数据库
