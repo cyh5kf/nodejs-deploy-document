@@ -447,7 +447,7 @@ db.createUser({user: '用户名(数据库名_runner)', pwd: 'xxx', roles: [{role
 ```
 创建备份角色，备份操作，只能读不能写
 ```
-db.createUser({user: '用户名(数据库名_wheel)', pwd: 'xxx', roles: [{role: 'read', db: '数据库名'}]})
+db.createUser({user: '备份用户名(数据库名_wheel)', pwd: 'xxx', roles: [{role: 'read', db: '数据库名'}]})
 ```
 添加其他数据权限流程，先到admin下授权db.auth，切换到其他数据库，创建用户角色，再创建备份角色
 
@@ -471,12 +471,67 @@ sudo service mongod restart
 
 直接登录某个数据库命令   
 ```
-mongo 127.0.0.1:29999/管理员名(_runner) -u 数据库名_runner -p 密码
+mongo 127.0.0.1:29999/数据库名 -u 用户名(数据库名_runner) -p 密码
 ```
 `show tables` `db.logins.find({})`就可以查询数据库了
 
 
 ### 从一台服务器迁移数据到另一个线上mongodb
+原理：先从一台服务器将数据库备份到本地，再从本地上传到另一个服务器<br>
+在服务器上创建文件夹`mkdir db``cd db`
+导出数据库
+```
+mongodump -h 127.0.0.1:29999 -d 数据库名 -u 备份用户名(数据库名_wheel) -p 密码 -o 输出文件夹(数据库名-old)
+```
+打包 
+```
+tar zcvf 打包文件夹名(数据库名-old.tar.gz) 输出文件夹(数据库名-old)
+```
+导出单表
+```
+mongoexport  -h 127.0.0.1:29999 -d 数据库名 -u 备份用户名(数据库名_wheel) -p 密码 -c 单表名 -q '{"name": {$ne: null}}' -o ./输出文件名(数据库名-单表名-old.json)
+```
+切换到本地命令行，将线上数据库下载到本地
+```
+scp -P 3389 管理员名@服务器公网IP:/home/管理员名/db/打包文件夹名(数据库名-old.tar.gz) ./
+```
+将线上单表下载到本地
+```
+scp -P 3389 管理员名@服务器公网IP:/home/管理员名/db/输出文件名(数据库名-单表名-old.json) ./
+```
+从本地重新上传数据库到目标服务器<br>
+进入目标服务器`mkdir newdb`<br>
+上传数据库和单表
+```
+scp -P 3389 ./输出文件名(数据库名-单表名-old.json) 管理员名@服务器公网IP:/home/管理员名/newdb
+scp -P 3389 ./打包文件夹名(数据库名-old.tar.gz) 管理员名@服务器公网IP:/home/管理员名/newdb
+```
+解压缩tar   
+```
+tar xvf 打包文件夹名(数据库名-old.tar.gz)
+```
+连上数据库`mongo --port 29999 `<br>
+`use admin`<br>
+`db.auth('管理员名(_owner)','密码')`<br>
+创建新数据库
+```
+use 新数据库名(项目名-数据库名-targt)
+db.createUser({user: '项目名-数据库名-targt', pwd: 'xxx', roles: [{role: 'readWrite', db: '新数据库名(项目名-数据库名-targt)'}]})
+```
+导入数据库
+```
+mongorestore -h 127.0.0.1:29999 -d 新数据库名 -u 数据库用户名 -p 密码 ./newdb/数据库名-old/数据库名
+```
+导入单表
+```
+mongoimport -h 127.0.0.1:29999 -d 新数据库名 -u 数据库用户名 -p 密码 -c users  ./newdb/数据库名-单表名-old.json 
+```
+检查，登录数据库
+```
+mongo 127.0.0.1:29999/新数据库名  -u 数据库用户名 -p 密码
+```
+`show tables``db.users.find({})`
+
 ### 数据库备份
 ### 上传数据库备份到七牛私有云
 ### 上传项目代码到线上私有git仓库
