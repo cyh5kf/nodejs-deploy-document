@@ -733,13 +733,13 @@ source .bashrc
 在服务器根目录下`cd /etc/nginx/conf.d`
 编辑配置文件`sudo vi  xxxx-3000.conf`
 ```
-upstream i18n {
+upstream 项目名 {
   server 127.0.0.1:3000;
 }
 
 server {
   listen 80;
-  server_name 域名地址;
+  server_name 域名地址(xxx.xxx.com);
 
   location / {
     proxy_set_header X-Real-IP $remote_addr;
@@ -776,7 +776,7 @@ sudo iptables-restore < /etc/iptables.rules
 
 本地修改同步到线上服务器<br>
 首先保证本地代码修改后提交gitj<br>
-将代码同步到线上，并启动服务
+将代码同步到线上，并启动服务,在本地项目执行命令
 ```
 pm2 deploy ecosystem.json production
 ```
