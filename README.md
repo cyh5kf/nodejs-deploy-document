@@ -730,7 +730,7 @@ source .bashrc
 ```
 
 配置nginx反向代理<br>
-在服务器根目录下`cd /etc/nginx/config.d`
+在服务器根目录下`cd /etc/nginx/conf.d`
 编辑配置文件`sudo vi  xxxx-3000.conf`
 ```
 upstream i18n {
